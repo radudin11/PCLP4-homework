@@ -47,10 +47,18 @@ curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
 sudo apt-get install -y docker-compose
 ```
 
+You can add your user to the `docker` group in order to avoid having to use `sudo` when running docker commands:
+```bash
+sudo usermod -aG docker $USER
+```
+You need to log out and log back in so that your group membership is re-evaluated.
+If you’re running Linux in a virtual machine, it may be necessary to restart the virtual machine for changes to take effect.
+More details about this on the official [page](https://docs.docker.com/engine/install/linux-postinstall/).
+
 After you have installed a working version of docker on your system, you will need to run the provided makefile to set up the database.
 
 ```bash
-cd docker && make start
+cd docker && docker-compose up -d mongo
 ```
 
 The assignment skeleton contains 2 directories:
@@ -60,11 +68,11 @@ The assignment skeleton contains 2 directories:
 
 You will implement this milestone in the `db-conn/source/app.d` file.
 
-### Working with mongo-db from D
 
 To be able to access `mongo` from D we use the `mongodb` library from the `vibe-d` framework.
 
-There is no need to install anything to use the `vibe-d` framework  as thisis taken care of by the D package manager: `dub`.
+You need to install `libevent-dev libssl-dev` as the `vibe-d` framework depends on them.
+There is no need to install anything else after this, as the rest of the packages are taken care of by the D package manager: `dub`.
 
 To compile and run the application we need to navigate to the `db-conn/` directory and run:
 
@@ -74,6 +82,24 @@ dub run
 
 Do not mind the deprecation messages issued by `dub` when running the command above with the skeleton.
 They come from the `vibe-d` library and there's nothing you can do about them.
+
+#### Simplified checker
+
+You can use docker to get all your development environment setup.
+Navigate in the `docker` directory and run `make start`:
+
+```bash
+cd docker && make start
+```
+
+This will start a mongo container and a container that will build your project and run the checker against the mongo container.
+
+You can use the makefile from the `db_conn` directory to achieve the same thing:
+```bash
+cd db_conn && make start
+```
+
+### Working with mongo-db from D
 
 To be able to interact with the database, we need to create a `MongoClient ` object that will represent the connection to the database:
 
@@ -148,4 +174,13 @@ users.update(["_id" : "unique_id"],                                             
 
 ### Tasks
 
-You will have to implement the functions marked with `TODO` in `Project/m1/db_conn/app.d`.
+You will have to implement the functions marked with `TODO` in `Project/m1/db_conn/app.d`:
+
+* `addUser` - receives a users credentials and adds them to the user database
+* `authUser` - receives a user name and password and returns whether the login is successful or not
+* `deleteUser` - receives an email and deletes the user from the user database and updates the files and URLs databases so that the userId is "Deleted_User"
+* `addFile` - adds a file to the files database - you must generate a unique identifier
+* `getFiles` - receives a userId (an email) and returns all the file entries that belong to the user
+* `getFile` - given a file hash, the function will return the first file that it finds in the files database that matches the given hash
+* `deleteFile` - given a file hash, removes all of the entries in the files database that match the hash file
+* Similarly, for the URL functions.
